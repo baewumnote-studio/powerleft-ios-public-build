@@ -62,13 +62,22 @@ void main() {
       await tester.pumpAndSettle();
 
       Future<void> tapKey(String key) async {
+        // The native keyboard animates independently of Flutter's scheduled
+        // frames. Let it close before scrolling a lazily built form button.
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pumpAndSettle();
         final finder = find.byKey(ValueKey(key));
         if (finder.evaluate().isEmpty) {
           await tester.scrollUntilVisible(finder, 250,
-            scrollable: find.byType(Scrollable).hitTestable().first);
+            scrollable: find.byWidgetPredicate((widget) =>
+              widget is Scrollable && widget.axisDirection == AxisDirection.down
+            ).hitTestable().first);
         }
         await tester.ensureVisible(finder);
+        await tester.pump(const Duration(milliseconds: 200));
         await tester.pumpAndSettle();
+        expect(finder, findsOneWidget, reason: 'Native capture target: $key');
         await tester.tap(finder);
         await tester.pumpAndSettle();
       }
