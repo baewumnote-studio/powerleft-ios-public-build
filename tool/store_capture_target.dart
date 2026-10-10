@@ -103,7 +103,14 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('runtime-capacity-input')), '1000');
       await addDevice('runtime-add-device', 'wifi_router');
       await addDevice('runtime-add-device', 'laptop');
-      await tester.ensureVisible(find.byKey(const ValueKey('runtime-capacity-input')));
+      final capacity = find.byKey(const ValueKey('runtime-capacity-input'));
+      if (capacity.evaluate().isEmpty) {
+        await tester.scrollUntilVisible(capacity, -250,
+          scrollable: find.byWidgetPredicate((widget) =>
+            widget is Scrollable && widget.axisDirection == AxisDirection.down
+          ).hitTestable().first);
+      }
+      await tester.ensureVisible(capacity);
       await screenshot('02_runtime_input');
       await tapKey('runtime-calculate');
       expect(find.byKey(const ValueKey('runtime-result-hero')), findsOneWidget);
@@ -118,7 +125,9 @@ void main() {
       final hours = find.byKey(const ValueKey('needed-hours-input'));
       if (hours.evaluate().isEmpty) {
         await tester.scrollUntilVisible(hours, -250,
-          scrollable: find.byType(Scrollable).hitTestable().first);
+            scrollable: find.byWidgetPredicate((widget) =>
+              widget is Scrollable && widget.axisDirection == AxisDirection.down
+            ).hitTestable().first);
       }
       await tester.ensureVisible(hours);
       await tester.enterText(hours, '8');
