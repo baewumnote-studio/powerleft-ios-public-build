@@ -1,0 +1,147 @@
+name: PowerLeft iOS release
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Build verification, or authenticated TestFlight delivery
+        type: choice
+        default: unsigned
+        options: [unsigned, testflight]
+      verified_run_id:
+        description: Successful unsigned run for this exact commit (TestFlight only)
+        type: string
+        default: ''
+      build_number:
+        description: New App Store Connect build number (TestFlight only)
+        type: string
+        default: '2'
+      test_ads:
+        description: Use official Google test advertisements
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: powerleft-ios-release
+  cancel-in-progress: false
+
+jobs:
+  quality:
+    if: github.repository == 'baewumnote-studio/powerleft-ios-public-build' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Validate the manual request and previous compilation
+        env:
+          POWERLEFT_MODE: ${{ inputs.mode }}
+          POWERLEFT_VERIFIED_RUN_ID: ${{ inputs.verified_run_id }}
+          POWERLEFT_BUILD_NUMBER: ${{ inputs.build_number }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/verify_request.py
+      - name: Install the validated Flutter toolchain
+        run: |
+          git clone --depth 1 --branch 3.47.5 https://github.com/flutter/flutter.git "$RUNNER_TEMP/powerleft-flutter"
+          echo "$RUNNER_TEMP/powerleft-flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/powerleft-flutter/bin/flutter" config --no-analytics
+      - name: Resolve the locked dependencies and inspect the code
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter analyze --no-pub
+          python3 tool/check_generated_ios_runner.py
+          python3 tool/test_ios_post_create_fixture.py
+          python3 tool/check_calculation_vectors.py
+          python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+      - name: Run all existing calculation, storage, language, and UI tests
+        run: |
+          flutter test --no-pub --dart-define=POWERLEFT_DISABLE_ADS_FOR_TESTING=true
+          flutter test --no-pub --dart-define=POWERLEFT_DISABLE_ADS_FOR_TESTING=true test/widgets/design_ui_checks.dart test/widgets/language_ui_checks.dart test/widgets/app_host_smoke.dart
+
+  compile:
+    needs: quality
+    if: inputs.mode == 'unsigned'
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      COCOAPODS_DISABLE_STATS: 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Check the validated Xcode and CocoaPods tools
+        run: |
+          test -d "$DEVELOPER_DIR"
+          xcodebuild -version
+          pod --version
+      - name: Install the validated Flutter toolchain
+        run: |
+          git clone --depth 1 --branch 3.47.5 https://github.com/flutter/flutter.git "$RUNNER_TEMP/powerleft-flutter"
+          echo "$RUNNER_TEMP/powerleft-flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/powerleft-flutter/bin/flutter" config --no-analytics
+          "$RUNNER_TEMP/powerleft-flutter/bin/flutter" precache --ios
+      - name: Prepare the locked native dependencies
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter build ios --config-only --release --no-codesign
+          cd ios
+          pod install
+      - name: Compile the actual iOS release without signing
+        run: flutter build ios --release --no-codesign --no-pub --dart-define=ADMOB_INTERSTITIAL_IOS=ca-app-pub-3940256099942544/4411468910
+
+  testflight:
+    needs: quality
+    if: inputs.mode == 'testflight'
+    runs-on: macos-15
+    timeout-minutes: 35
+    # Must be configured with main-only deployment and a human reviewer BEFORE
+    # its secrets are installed. No PR/push trigger can reach this environment.
+    environment: app-store
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
+      COCOAPODS_DISABLE_STATS: 'true'
+      POWERLEFT_BUILD_NUMBER: ${{ inputs.build_number }}
+      POWERLEFT_TEST_ADS: ${{ inputs.test_ads }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Verify and install protected App Store signing material
+        env:
+          POWERLEFT_DISTRIBUTION_P12_BASE64: ${{ secrets.POWERLEFT_DISTRIBUTION_P12_BASE64 }}
+          POWERLEFT_DISTRIBUTION_P12_PASSWORD: ${{ secrets.POWERLEFT_DISTRIBUTION_P12_PASSWORD }}
+          POWERLEFT_APPSTORE_PROFILE_BASE64: ${{ secrets.POWERLEFT_APPSTORE_PROFILE_BASE64 }}
+          POWERLEFT_ASC_PRIVATE_KEY_BASE64: ${{ secrets.POWERLEFT_ASC_PRIVATE_KEY_BASE64 }}
+          POWERLEFT_ASC_KEY_ID: ${{ secrets.POWERLEFT_ASC_KEY_ID }}
+          POWERLEFT_ASC_ISSUER_ID: ${{ secrets.POWERLEFT_ASC_ISSUER_ID }}
+          POWERLEFT_PRIVATE_BACKUP_TOKEN: ${{ secrets.POWERLEFT_PRIVATE_BACKUP_TOKEN }}
+          POWERLEFT_ADMOB_APP_ID: ${{ vars.POWERLEFT_ADMOB_APP_ID }}
+          POWERLEFT_ADMOB_INTERSTITIAL_ID: ${{ vars.POWERLEFT_ADMOB_INTERSTITIAL_ID }}
+        run: python3 .github/scripts/app_store.py prepare
+      - name: Install the validated native toolchain
+        run: |
+          test -d "$DEVELOPER_DIR"
+          xcodebuild -version
+          pod --version
+          git clone --depth 1 --branch 3.47.5 https://github.com/flutter/flutter.git "$RUNNER_TEMP/powerleft-flutter"
+          echo "$RUNNER_TEMP/powerleft-flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/powerleft-flutter/bin/flutter" config --no-analytics
+          "$RUNNER_TEMP/powerleft-flutter/bin/flutter" precache --ios
+      - name: Build, verify, and upload privately to App Store Connect
+        env:
+          POWERLEFT_PRIVATE_BACKUP_TOKEN: ${{ secrets.POWERLEFT_PRIVATE_BACKUP_TOKEN }}
+        run: python3 .github/scripts/app_store.py deliver
+      - name: Remove temporary certificates, profiles, API keys, and binaries
+        if: always()
+        run: python3 .github/scripts/app_store.py cleanup

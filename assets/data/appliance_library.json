@@ -1,0 +1,259 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "portable_fridge",
+      "nameKey": "devicePortableFridge",
+      "category": "camping",
+      "rangeW": [
+        35,
+        70
+      ],
+      "suggestedUsage": "cycles",
+      "hasStartupSurge": true
+    },
+    {
+      "id": "electric_blanket",
+      "nameKey": "deviceElectricBlanket",
+      "category": "camping",
+      "rangeW": [
+        50,
+        150
+      ],
+      "suggestedUsage": "usuallyOn"
+    },
+    {
+      "id": "led_light",
+      "nameKey": "deviceLedLight",
+      "category": "camping",
+      "rangeW": [
+        5,
+        20
+      ],
+      "suggestedUsage": "alwaysOn"
+    },
+    {
+      "id": "fan",
+      "nameKey": "deviceFan",
+      "category": "camping",
+      "rangeW": [
+        20,
+        75
+      ],
+      "suggestedUsage": "alwaysOn"
+    },
+    {
+      "id": "phone_charger",
+      "nameKey": "devicePhoneCharger",
+      "category": "camping",
+      "rangeW": [
+        5,
+        30
+      ],
+      "suggestedUsage": "occasional"
+    },
+    {
+      "id": "laptop",
+      "nameKey": "deviceLaptop",
+      "category": "camping",
+      "rangeW": [
+        30,
+        100
+      ],
+      "suggestedUsage": "usuallyOn"
+    },
+    {
+      "id": "cpap",
+      "nameKey": "deviceCpap",
+      "category": "home_backup",
+      "rangeW": [
+        20,
+        100
+      ],
+      "suggestedUsage": "alwaysOn",
+      "isMedicalRelated": true
+    },
+    {
+      "id": "refrigerator",
+      "nameKey": "deviceRefrigerator",
+      "category": "home_backup",
+      "rangeW": [
+        80,
+        200
+      ],
+      "suggestedUsage": "cycles",
+      "hasStartupSurge": true
+    },
+    {
+      "id": "freezer",
+      "nameKey": "deviceFreezer",
+      "category": "home_backup",
+      "rangeW": [
+        80,
+        200
+      ],
+      "suggestedUsage": "cycles",
+      "hasStartupSurge": true
+    },
+    {
+      "id": "wifi_router",
+      "nameKey": "deviceWifiRouter",
+      "category": "home_backup",
+      "rangeW": [
+        5,
+        20
+      ],
+      "suggestedUsage": "alwaysOn"
+    },
+    {
+      "id": "modem",
+      "nameKey": "deviceModem",
+      "category": "home_backup",
+      "rangeW": [
+        5,
+        20
+      ],
+      "suggestedUsage": "alwaysOn"
+    },
+    {
+      "id": "tv",
+      "nameKey": "deviceTv",
+      "category": "home_backup",
+      "rangeW": [
+        50,
+        150
+      ],
+      "suggestedUsage": "usuallyOn"
+    },
+    {
+      "id": "desktop_pc",
+      "nameKey": "deviceDesktopPc",
+      "category": "home_backup",
+      "rangeW": [
+        100,
+        400
+      ],
+      "suggestedUsage": "usuallyOn"
+    },
+    {
+      "id": "projector",
+      "nameKey": "deviceProjector",
+      "category": "outdoor",
+      "rangeW": [
+        50,
+        300
+      ],
+      "suggestedUsage": "alwaysOn"
+    },
+    {
+      "id": "speaker",
+      "nameKey": "deviceSpeaker",
+      "category": "outdoor",
+      "rangeW": [
+        10,
+        100
+      ],
+      "suggestedUsage": "usuallyOn"
+    },
+    {
+      "id": "camera_charger",
+      "nameKey": "deviceCameraCharger",
+      "category": "outdoor",
+      "rangeW": [
+        5,
+        30
+      ],
+      "suggestedUsage": "occasional"
+    },
+    {
+      "id": "drone_charger",
+      "nameKey": "deviceDroneCharger",
+      "category": "outdoor",
+      "rangeW": [
+        50,
+        200
+      ],
+      "suggestedUsage": "occasional"
+    },
+    {
+      "id": "coffee_maker",
+      "nameKey": "deviceCoffeeMaker",
+      "category": "high_draw",
+      "rangeW": [
+        800,
+        1500
+      ],
+      "suggestedUsage": "occasional"
+    },
+    {
+      "id": "microwave",
+      "nameKey": "deviceMicrowave",
+      "category": "high_draw",
+      "rangeW": [
+        800,
+        1500
+      ],
+      "suggestedUsage": "occasional"
+    },
+    {
+      "id": "induction_cooktop",
+      "nameKey": "deviceInductionCooktop",
+      "category": "high_draw",
+      "rangeW": [
+        1000,
+        1800
+      ],
+      "suggestedUsage": "occasional"
+    },
+    {
+      "id": "hair_dryer",
+      "nameKey": "deviceHairDryer",
+      "category": "high_draw",
+      "rangeW": [
+        1000,
+        1800
+      ],
+      "suggestedUsage": "occasional"
+    },
+    {
+      "id": "portable_monitor",
+      "nameKey": "devicePortableMonitor",
+      "category": "work",
+      "rangeW": [
+        5,
+        20
+      ],
+      "suggestedUsage": "usuallyOn"
+    },
+    {
+      "id": "work_light",
+      "nameKey": "deviceWorkLight",
+      "category": "work",
+      "rangeW": [
+        10,
+        100
+      ],
+      "suggestedUsage": "alwaysOn"
+    },
+    {
+      "id": "power_tool_charger",
+      "nameKey": "devicePowerToolCharger",
+      "category": "work",
+      "rangeW": [
+        60,
+        300
+      ],
+      "suggestedUsage": "occasional"
+    },
+    {
+      "id": "soldering_iron",
+      "nameKey": "deviceSolderingIron",
+      "category": "work",
+      "rangeW": [
+        40,
+        100
+      ],
+      "suggestedUsage": "occasional"
+    }
+  ]
+}

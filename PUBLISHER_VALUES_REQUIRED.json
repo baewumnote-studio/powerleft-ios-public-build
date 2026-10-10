@@ -1,0 +1,19 @@
+{
+  "bundleId": "com.baewumnote.powerleft",
+  "appleTeamId": "39762JRYD4",
+  "adMobPublisherId": "<REQUIRED_PUB_16_DIGITS>",
+  "adMobIosAppId": "<REQUIRED_FROM_PUBLISHER>",
+  "adMobInterstitialIosUnitId": "<REQUIRED_FROM_PUBLISHER>",
+  "developerWebsiteUrl": "<REQUIRED_PUBLIC_HTTPS_URL>",
+  "privacyPolicyUrl": "<REQUIRED_PUBLIC_URL>",
+  "privacyChoicesUrl": "<OPTIONAL_PUBLIC_URL_OR_EMPTY>",
+  "supportUrl": "<REQUIRED_PUBLIC_URL>",
+  "supportEmail": "<REQUIRED_PUBLIC_EMAIL>",
+  "appReviewContactName": "<REQUIRED>",
+  "appReviewContactEmail": "<REQUIRED>",
+  "appReviewContactPhone": "<REQUIRED>",
+  "dsaTraderStatus": "<REQUIRED_TRADER_OR_NON_TRADER>",
+  "dsaPublicAddress": "<REQUIRED_IF_TRADER>",
+  "dsaPublicPhone": "<REQUIRED_IF_TRADER_IN_INTERNATIONAL_FORMAT>",
+  "dsaPublicEmail": "<REQUIRED_IF_TRADER>"
+}

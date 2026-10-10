@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "profiles": {
+    "AC": {
+      "conservative": {
+        "reserveFloorPercent": 15,
+        "efficiency": 0.82
+      },
+      "typical": {
+        "reserveFloorPercent": 10,
+        "efficiency": 0.88
+      },
+      "best": {
+        "reserveFloorPercent": 5,
+        "efficiency": 0.93
+      }
+    },
+    "DC12V": {
+      "conservative": {
+        "reserveFloorPercent": 15,
+        "efficiency": 0.88
+      },
+      "typical": {
+        "reserveFloorPercent": 10,
+        "efficiency": 0.92
+      },
+      "best": {
+        "reserveFloorPercent": 5,
+        "efficiency": 0.96
+      }
+    },
+    "USB_C": {
+      "conservative": {
+        "reserveFloorPercent": 15,
+        "efficiency": 0.88
+      },
+      "typical": {
+        "reserveFloorPercent": 10,
+        "efficiency": 0.92
+      },
+      "best": {
+        "reserveFloorPercent": 5,
+        "efficiency": 0.96
+      }
+    }
+  },
+  "usagePatterns": {
+    "alwaysOn": 1.0,
+    "usuallyOn": 0.75,
+    "cycles": 0.5,
+    "occasional": 0.25
+  }
+}

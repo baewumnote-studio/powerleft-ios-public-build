@@ -1,0 +1,316 @@
+{
+  "schemaVersion": 1,
+  "generatedFrom": "PowerLeft calculation spec + assets/config/preset_values.json",
+  "tolerance": 1e-06,
+  "cases": [
+    {
+      "id": "runtime_ac_1000_90",
+      "mode": "runtime",
+      "capacityWh": 1000,
+      "chargePercent": 100,
+      "connection": "AC",
+      "devices": [
+        {
+          "watts": 90,
+          "usagePattern": "alwaysOn"
+        }
+      ],
+      "expected": {
+        "conservative": 7.744444444,
+        "typical": 8.8,
+        "best": 9.816666667,
+        "totalAverageLoadW": 90.0,
+        "totalRatedLoadW": 90.0,
+        "hasNoUsableEnergy": false
+      }
+    },
+    {
+      "id": "runtime_dc_1000_90",
+      "mode": "runtime",
+      "capacityWh": 1000,
+      "chargePercent": 100,
+      "connection": "DC12V",
+      "devices": [
+        {
+          "watts": 90,
+          "usagePattern": "alwaysOn"
+        }
+      ],
+      "expected": {
+        "conservative": 8.311111111,
+        "typical": 9.2,
+        "best": 10.133333333,
+        "totalAverageLoadW": 90.0,
+        "totalRatedLoadW": 90.0,
+        "hasNoUsableEnergy": false
+      }
+    },
+    {
+      "id": "runtime_usb_1000_90",
+      "mode": "runtime",
+      "capacityWh": 1000,
+      "chargePercent": 100,
+      "connection": "USB_C",
+      "devices": [
+        {
+          "watts": 90,
+          "usagePattern": "alwaysOn"
+        }
+      ],
+      "expected": {
+        "conservative": 8.311111111,
+        "typical": 9.2,
+        "best": 10.133333333,
+        "totalAverageLoadW": 90.0,
+        "totalRatedLoadW": 90.0,
+        "hasNoUsableEnergy": false
+      }
+    },
+    {
+      "id": "runtime_1024_82_167",
+      "mode": "runtime",
+      "capacityWh": 1024,
+      "chargePercent": 82,
+      "connection": "AC",
+      "devices": [
+        {
+          "watts": 167,
+          "usagePattern": "alwaysOn"
+        }
+      ],
+      "expected": {
+        "conservative": 3.368776048,
+        "typical": 3.885068263,
+        "best": 4.390936527,
+        "totalAverageLoadW": 167.0,
+        "totalRatedLoadW": 167.0,
+        "hasNoUsableEnergy": false
+      }
+    },
+    {
+      "id": "runtime_fridge_cycle",
+      "mode": "runtime",
+      "capacityWh": 768,
+      "chargePercent": 100,
+      "connection": "AC",
+      "devices": [
+        {
+          "watts": 90,
+          "usageFactor": 0.5
+        }
+      ],
+      "expected": {
+        "conservative": 11.895466667,
+        "typical": 13.5168,
+        "best": 15.0784,
+        "totalAverageLoadW": 45.0,
+        "totalRatedLoadW": 90.0,
+        "hasNoUsableEnergy": false
+      }
+    },
+    {
+      "id": "runtime_mixed_ac_dc",
+      "mode": "runtime",
+      "capacityWh": 1000,
+      "chargePercent": 100,
+      "connection": "AC",
+      "devices": [
+        {
+          "watts": 100,
+          "usagePattern": "alwaysOn",
+          "connectionOverride": "AC"
+        },
+        {
+          "watts": 20,
+          "usagePattern": "alwaysOn",
+          "connectionOverride": "DC12V"
+        }
+      ],
+      "expected": {
+        "conservative": 5.875095785,
+        "typical": 6.648175182,
+        "best": 7.40104712,
+        "totalAverageLoadW": 120.0,
+        "totalRatedLoadW": 120.0,
+        "hasNoUsableEnergy": false
+      }
+    },
+    {
+      "id": "runtime_charge_below_reserve",
+      "mode": "runtime",
+      "capacityWh": 1000,
+      "chargePercent": 5,
+      "connection": "AC",
+      "devices": [
+        {
+          "watts": 50,
+          "usagePattern": "alwaysOn"
+        }
+      ],
+      "expected": {
+        "conservative": 0.0,
+        "typical": 0.0,
+        "best": 0.0,
+        "totalAverageLoadW": 50.0,
+        "totalRatedLoadW": 50.0,
+        "hasNoUsableEnergy": true
+      }
+    },
+    {
+      "id": "runtime_custom_assumptions",
+      "mode": "runtime",
+      "capacityWh": 1000,
+      "chargePercent": 100,
+      "connection": "AC",
+      "customTypicalEfficiency": 0.9,
+      "customReserveFloorPercent": 10,
+      "devices": [
+        {
+          "watts": 100,
+          "usagePattern": "alwaysOn"
+        }
+      ],
+      "expected": {
+        "conservative": 7.14,
+        "typical": 8.1,
+        "best": 9.025,
+        "totalAverageLoadW": 100.0,
+        "totalRatedLoadW": 100.0,
+        "hasNoUsableEnergy": false
+      }
+    },
+    {
+      "id": "runtime_multi_camping",
+      "mode": "runtime",
+      "capacityWh": 1024,
+      "chargePercent": 85,
+      "connection": "AC",
+      "devices": [
+        {
+          "watts": 45,
+          "usageFactor": 0.5,
+          "connectionOverride": "DC12V"
+        },
+        {
+          "watts": 65,
+          "usageFactor": 0.75,
+          "connectionOverride": "USB_C"
+        },
+        {
+          "watts": 10,
+          "usagePattern": "alwaysOn",
+          "connectionOverride": "AC"
+        },
+        {
+          "watts": 12,
+          "usagePattern": "alwaysOn",
+          "connectionOverride": "AC"
+        }
+      ],
+      "expected": {
+        "conservative": 6.649648133,
+        "typical": 7.496657825,
+        "best": 8.36988825,
+        "totalAverageLoadW": 93.25,
+        "totalRatedLoadW": 132.0,
+        "hasNoUsableEnergy": false
+      }
+    },
+    {
+      "id": "needed_ac_167_8",
+      "mode": "batteryNeeded",
+      "desiredRuntimeHours": 8,
+      "connection": "AC",
+      "devices": [
+        {
+          "watts": 167,
+          "usagePattern": "alwaysOn"
+        }
+      ],
+      "expected": {
+        "minimumWh": 1436.559139785,
+        "recommendedWh": 1686.868686869,
+        "comfortableWh": 2036.585365854,
+        "energyDemandWh": 1336.0,
+        "totalAverageLoadW": 167.0
+      }
+    },
+    {
+      "id": "needed_dc_100_12",
+      "mode": "batteryNeeded",
+      "desiredRuntimeHours": 12,
+      "connection": "DC12V",
+      "devices": [
+        {
+          "watts": 100,
+          "usagePattern": "alwaysOn"
+        }
+      ],
+      "expected": {
+        "minimumWh": 1250.0,
+        "recommendedWh": 1449.275362319,
+        "comfortableWh": 1704.545454545,
+        "energyDemandWh": 1200.0,
+        "totalAverageLoadW": 100.0
+      }
+    },
+    {
+      "id": "needed_mixed_backup_12h",
+      "mode": "batteryNeeded",
+      "desiredRuntimeHours": 12,
+      "connection": "AC",
+      "devices": [
+        {
+          "watts": 120,
+          "usageFactor": 0.5,
+          "connectionOverride": "AC"
+        },
+        {
+          "watts": 12,
+          "usagePattern": "alwaysOn",
+          "connectionOverride": "AC"
+        },
+        {
+          "watts": 10,
+          "usagePattern": "alwaysOn",
+          "connectionOverride": "USB_C"
+        }
+      ],
+      "expected": {
+        "minimumWh": 1054.032258065,
+        "recommendedWh": 1235.836627141,
+        "comfortableWh": 1487.527716186,
+        "energyDemandWh": 984.0,
+        "totalAverageLoadW": 82.0
+      }
+    },
+    {
+      "id": "needed_camping_48h",
+      "mode": "batteryNeeded",
+      "desiredRuntimeHours": 48,
+      "connection": "DC12V",
+      "devices": [
+        {
+          "watts": 45,
+          "usageFactor": 0.5
+        },
+        {
+          "watts": 10,
+          "usagePattern": "alwaysOn"
+        },
+        {
+          "watts": 30,
+          "usageFactor": 0.25,
+          "connectionOverride": "USB_C"
+        }
+      ],
+      "expected": {
+        "minimumWh": 2000.0,
+        "recommendedWh": 2318.84057971,
+        "comfortableWh": 2727.272727273,
+        "energyDemandWh": 1920.0,
+        "totalAverageLoadW": 40.0
+      }
+    }
+  ]
+}
