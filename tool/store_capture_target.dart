@@ -1,12 +1,23 @@
 // Copied to integration_test only by the screenshot workflow. No release code changes.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:drift/drift.dart' show DatabaseConnection;
+import 'package:drift/native.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:powerleft/main.dart' as app;
+import 'package:powerleft/app/powerleft_app.dart';
+import 'package:powerleft/data/db/app_database.dart';
+import 'package:powerleft/providers.dart';
+import 'package:powerleft/services/settings_service.dart';
 import '../test/support/preferences_test_support.dart';
 
 void main() {
-  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  const hostCheck = bool.fromEnvironment('POWERLEFT_CAPTURE_HOST_CHECK');
+  final binding = hostCheck
+      ? null
+      : IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  if (hostCheck) TestWidgetsFlutterBinding.ensureInitialized();
   for (final language in ['en', 'ko', 'ja', 'de', 'fr', 'es']) {
     testWidgets('Store screenshots: $language', (tester) async {
       if (const bool.fromEnvironment('POWERLEFT_CAPTURE_HOST_CHECK')) {
@@ -24,7 +35,24 @@ void main() {
       });
       tester.binding.platformDispatcher.localeTestValue = Locale(language);
       addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
-      await app.main();
+      if (hostCheck) {
+        final settings = await SettingsService.create();
+        await settings.beginSession();
+        final database = AppDatabase(DatabaseConnection(
+          NativeDatabase.memory(), closeStreamsSynchronously: true,
+        ));
+        addTearDown(() async {
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump();
+          await database.close();
+        });
+        await tester.pumpWidget(ProviderScope(overrides: [
+          settingsServiceProvider.overrideWithValue(settings),
+          databaseProvider.overrideWithValue(database),
+        ], child: const PowerLeftApp()));
+      } else {
+        await app.main();
+      }
       await tester.pumpAndSettle();
 
       Future<void> tapKey(String key) async {
@@ -44,7 +72,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         if (!const bool.fromEnvironment('POWERLEFT_CAPTURE_HOST_CHECK')) {
-          await binding.takeScreenshot('$language/$name');
+          await binding!.takeScreenshot('$language/$name');
         }
       }
 
