@@ -99,9 +99,9 @@ void main() {
       await tapKey('runtime-calculate');
       expect(find.byKey(const ValueKey('runtime-result-hero')), findsOneWidget);
       await screenshot('03_runtime_result');
-      await tester.pageBack();
+      await tester.tap(find.byType(BackButton).hitTestable());
       await tester.pumpAndSettle();
-      await tester.pageBack();
+      await tester.tap(find.byType(BackButton).hitTestable());
       await tester.pumpAndSettle();
       await tapKey('home-needed-card');
       await addDevice('needed-add-device', 'wifi_router');
