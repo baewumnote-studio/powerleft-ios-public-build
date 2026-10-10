@@ -73,6 +73,7 @@ jobs:
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
       COCOAPODS_DISABLE_STATS: 'true'
+      POWERLEFT_ADMOB_INTERSTITIAL_ID: ${{ vars.POWERLEFT_ADMOB_INTERSTITIAL_ID }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -95,10 +96,35 @@ jobs:
           cd ios
           pod install
       - name: Compile the actual iOS release without signing
-        run: flutter build ios --release --no-codesign --no-pub --dart-define=ADMOB_INTERSTITIAL_IOS=ca-app-pub-3940256099942544/4411468910
+        run: flutter build ios --release --no-codesign --no-pub --dart-define="ADMOB_INTERSTITIAL_IOS=$POWERLEFT_ADMOB_INTERSTITIAL_ID"
+
+  signing-preflight:
+    needs: quality
+    if: inputs.mode == 'testflight'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: app-store
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Verify actual protected signing material before starting macOS
+        env:
+          POWERLEFT_BUILD_NUMBER: ${{ inputs.build_number }}
+          POWERLEFT_TEST_ADS: ${{ inputs.test_ads }}
+          POWERLEFT_DISTRIBUTION_P12_BASE64: ${{ secrets.POWERLEFT_DISTRIBUTION_P12_BASE64 }}
+          POWERLEFT_DISTRIBUTION_P12_PASSWORD: ${{ secrets.POWERLEFT_DISTRIBUTION_P12_PASSWORD }}
+          POWERLEFT_APPSTORE_PROFILE_BASE64: ${{ secrets.POWERLEFT_APPSTORE_PROFILE_BASE64 }}
+          POWERLEFT_ASC_PRIVATE_KEY_BASE64: ${{ secrets.POWERLEFT_ASC_PRIVATE_KEY_BASE64 }}
+          POWERLEFT_ASC_KEY_ID: ${{ secrets.POWERLEFT_ASC_KEY_ID }}
+          POWERLEFT_ASC_ISSUER_ID: ${{ secrets.POWERLEFT_ASC_ISSUER_ID }}
+          POWERLEFT_PRIVATE_BACKUP_TOKEN: ${{ secrets.POWERLEFT_PRIVATE_BACKUP_TOKEN }}
+          POWERLEFT_ADMOB_APP_ID: ${{ vars.POWERLEFT_ADMOB_APP_ID }}
+          POWERLEFT_ADMOB_INTERSTITIAL_ID: ${{ vars.POWERLEFT_ADMOB_INTERSTITIAL_ID }}
+        run: python3 .github/scripts/app_store.py preflight
 
   testflight:
-    needs: quality
+    needs: [quality, signing-preflight]
     if: inputs.mode == 'testflight'
     runs-on: macos-15
     timeout-minutes: 35

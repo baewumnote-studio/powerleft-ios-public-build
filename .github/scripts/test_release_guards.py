@@ -52,6 +52,13 @@ class AppStoreProfileGuards(TestCase):
             app_store.validate_public_ids(False,'ca-app-pub-1111111111111111~1111111111','ca-app-pub-2222222222222222/2222222222')
     def test_explicit_test_ads_remain_official(self):
         self.assertEqual(app_store.validate_public_ids(True,'',''),(app_store.TEST_APP,app_store.TEST_UNIT))
+    def test_verified_powerleft_production_pair_accepted(self):
+        self.assertEqual(app_store.validate_public_ids(False,app_store.PRODUCTION_APP,app_store.PRODUCTION_UNIT),
+                         (app_store.PRODUCTION_APP,app_store.PRODUCTION_UNIT))
+    def test_other_app_in_same_admob_account_refused(self):
+        with self.assertRaises(ValueError):
+            app_store.validate_public_ids(False,'ca-app-pub-9507165963073699~1111111111',
+                                          'ca-app-pub-9507165963073699/2222222222')
 
 class PreviousCompilationGuards(TestCase):
     def setUp(self):

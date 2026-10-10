@@ -46,8 +46,9 @@ material is never stored in Git.
 
 Run `unsigned` successfully first. Then select `testflight`, give the successful
 unsigned run ID for the **same source commit**, and choose a new build number.
-The signing job checks the real CMS profile signature, certificate/private-key
-match and validity, verifies the signed archive and exported IPA, and uploads
+An inexpensive protected Linux job checks the real CMS profile signature,
+certificate/private-key match and validity before the Mac signing job starts.
+The Mac job then verifies the signed archive and exported IPA, and uploads
 directly to App Store Connect. It publishes no signed IPA or archive to GitHub.
 Signed binaries are retained only in a draft release of the original **private**
 PowerLeft repository, with verified upload sizes and SHA-256 digests. Its backup
@@ -57,8 +58,12 @@ are removed afterward. No existing private source commit or history is replaced.
 
 `test_ads` defaults to false for production delivery. Enabling it explicitly is
 for testing only and uses Google's official test app/interstitial IDs.
-Production delivery requires the real PowerLeft AdMob values in protected environment
-variables `POWERLEFT_ADMOB_APP_ID` and `POWERLEFT_ADMOB_INTERSTITIAL_ID`.
+The verified PowerLeft AdMob IDs are recorded in `PUBLISHER_VALUES_REQUIRED.json`
+and connected through repository variables `POWERLEFT_ADMOB_APP_ID` and
+`POWERLEFT_ADMOB_INTERSTITIAL_ID`. These are public advertising identifiers.
+Production delivery rejects IDs from another app, including another app in the
+same AdMob account. The PowerLeft developer website is
+https://baewumnote-studio.github.io/powerleft/.
 App Store Connect processing, tester availability and actual iPhone verification
 remain separate steps after upload. Final store release also requires confirmed
 privacy/support/marketing URLs, publisher information, store metadata, and real

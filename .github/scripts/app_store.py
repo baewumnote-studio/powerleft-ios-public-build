@@ -24,6 +24,8 @@ CERTIFICATE_SHA256 = 'faa9fe5ba226b207869a5070716bfb41aa9b95f250c374a4ddffbcb996
 VERSION = '1.0.0'
 TEST_APP = 'ca-app-pub-3940256099942544~1458002511'
 TEST_UNIT = 'ca-app-pub-3940256099942544/4411468910'
+PRODUCTION_APP = 'ca-app-pub-9507165963073699~3930382930'
+PRODUCTION_UNIT = 'ca-app-pub-9507165963073699/3592480748'
 PRIVATE_BACKUP_REPOSITORY = 'baewumnote-studio/powerleft'
 
 def mask(value):
@@ -74,7 +76,7 @@ def validate_public_ids(test_ads, app_id, unit_id):
     if (not re.fullmatch(r'ca-app-pub-[0-9]{16}~[0-9]{10}',app_id)
         or not re.fullmatch(r'ca-app-pub-[0-9]{16}/[0-9]{10}',unit_id)
         or app_id.split('~')[0]!=unit_id.split('/')[0]
-        or app_id.startswith('ca-app-pub-3940256099942544')):
+        or app_id!=PRODUCTION_APP or unit_id!=PRODUCTION_UNIT):
         raise ValueError('The real PowerLeft AdMob app and interstitial identifiers are required.')
     return app_id,unit_id
 
@@ -102,6 +104,45 @@ def verify_private_backup():
     repository=backup_request('')
     if repository.get('full_name')!=PRIVATE_BACKUP_REPOSITORY or repository.get('private') is not True:
         raise ValueError('Signed binaries can only be retained in the original private PowerLeft repository.')
+
+def preflight():
+    # Verify real signing material on inexpensive Linux before a macOS job starts.
+    names=('POWERLEFT_DISTRIBUTION_P12_BASE64','POWERLEFT_DISTRIBUTION_P12_PASSWORD',
+           'POWERLEFT_APPSTORE_PROFILE_BASE64','POWERLEFT_ASC_PRIVATE_KEY_BASE64',
+           'POWERLEFT_ASC_KEY_ID','POWERLEFT_ASC_ISSUER_ID','POWERLEFT_PRIVATE_BACKUP_TOKEN')
+    if any(not os.environ.get(name) for name in names):
+        raise ValueError('Seven protected App Store environment secrets are required before signing.')
+    for name in names: mask(os.environ[name])
+    key_id=os.environ[names[4]]; issuer=os.environ[names[5]]
+    if not re.fullmatch(r'[A-Z0-9]{10}',key_id) or not re.fullmatch(r'[a-fA-F0-9-]{36}',issuer):
+        raise ValueError('Invalid App Store Connect API identity.')
+    if not re.fullmatch(r'[1-9][0-9]{0,6}',os.environ.get('POWERLEFT_BUILD_NUMBER','')):
+        raise ValueError('Invalid build number.')
+    validate_public_ids(os.environ.get('POWERLEFT_TEST_ADS')=='true',
+        os.environ.get('POWERLEFT_ADMOB_APP_ID',''),os.environ.get('POWERLEFT_ADMOB_INTERSTITIAL_ID',''))
+    profile=profile_from_bytes(base64.b64decode(os.environ[names[2]],validate=True))
+    validate_profile(profile)
+    api_key=base64.b64decode(os.environ[names[3]],validate=True)
+    command(['openssl','pkey','-check','-noout'],data=api_key)
+    p12=base64.b64decode(os.environ[names[0]],validate=True)
+    environment={**os.environ,'POWERLEFT_P12_CHECK_PASSWORD':os.environ[names[1]]}
+    def unpack(options):
+        args=['openssl','pkcs12','-passin','env:POWERLEFT_P12_CHECK_PASSWORD']
+        try: return command(args+options,data=p12,env=environment)
+        except ValueError: return command(args+options+['-legacy'],data=p12,env=environment)
+    cert_pem=unpack(['-clcerts','-nokeys'])
+    cert=command(['openssl','x509','-outform','DER'],data=cert_pem)
+    if hashlib.sha256(cert).hexdigest()!=CERTIFICATE_SHA256:
+        raise ValueError('The P12 must contain the verified existing distribution certificate.')
+    command(['openssl','x509','-checkend','86400','-noout'],data=cert_pem)
+    subject=command(['openssl','x509','-noout','-subject','-nameopt','RFC2253'],data=cert_pem).decode()
+    if 'OU='+TEAM not in subject: raise ValueError('Wrong distribution team.')
+    private_public=command(['openssl','pkey','-pubout','-outform','DER'],data=unpack(['-nocerts','-nodes']))
+    certificate_public=command(['openssl','x509','-pubkey','-noout'],data=cert_pem)
+    certificate_public=command(['openssl','pkey','-pubin','-outform','DER'],data=certificate_public)
+    if private_public!=certificate_public: raise ValueError('P12 key and certificate do not match.')
+    verify_private_backup()
+    print('PASS: actual CMS signature, App Store entitlements, P12 password/key/certificate, API key and private backup access verified before macOS.')
 
 def retain_private_binaries(archive,ipa,build):
     verify_private_backup()
@@ -289,9 +330,9 @@ def cleanup():
     print('Temporary signing material and distribution binaries removed; no public artifact published.')
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(); parser.add_argument('operation',choices=('prepare','deliver','cleanup'))
+    parser=argparse.ArgumentParser(); parser.add_argument('operation',choices=('preflight','prepare','deliver','cleanup'))
     operation=parser.parse_args().operation
-    try: {'prepare':prepare,'deliver':deliver,'cleanup':cleanup}[operation]()
+    try: {'preflight':preflight,'prepare':prepare,'deliver':deliver,'cleanup':cleanup}[operation]()
     except Exception as error:
         if isinstance(error,ValueError): print('STOP: '+str(error))
         else: print('STOP: signing operation failed; '+type(error).__name__+' (private values withheld).')
