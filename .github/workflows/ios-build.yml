@@ -17,9 +17,9 @@ on:
         type: string
         default: '2'
       test_ads:
-        description: Use official Google test advertisements
+        description: Testing only - never select this build for App Store release
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: read

@@ -55,8 +55,9 @@ credential must be a fine-grained token limited to that private repository's
 contents permission. Temporary certificates, profiles, API keys and runner binaries
 are removed afterward. No existing private source commit or history is replaced.
 
-`test_ads` defaults to true and uses Google's official test app/interstitial IDs.
-Turning it off requires the real PowerLeft AdMob values in protected environment
+`test_ads` defaults to false for production delivery. Enabling it explicitly is
+for testing only and uses Google's official test app/interstitial IDs.
+Production delivery requires the real PowerLeft AdMob values in protected environment
 variables `POWERLEFT_ADMOB_APP_ID` and `POWERLEFT_ADMOB_INTERSTITIAL_ID`.
 App Store Connect processing, tester availability and actual iPhone verification
 remain separate steps after upload. Final store release also requires confirmed
