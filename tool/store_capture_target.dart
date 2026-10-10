@@ -8,6 +8,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:powerleft/main.dart' as app;
 import 'package:powerleft/app/powerleft_app.dart';
 import 'package:powerleft/data/db/app_database.dart';
+import 'package:powerleft/data/services/appliance_library_service.dart';
 import 'package:powerleft/providers.dart';
 import 'package:powerleft/services/settings_service.dart';
 import '../test/support/preferences_test_support.dart';
@@ -36,6 +37,10 @@ void main() {
       tester.binding.platformDispatcher.localeTestValue = Locale(language);
       addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
       if (hostCheck) {
+        final presets = await tester.runAsync(
+          () => const ApplianceLibraryService().load(),
+        );
+        expect(presets, isNotNull);
         final settings = await SettingsService.create();
         await settings.beginSession();
         final database = AppDatabase(DatabaseConnection(
@@ -49,6 +54,7 @@ void main() {
         await tester.pumpWidget(ProviderScope(overrides: [
           settingsServiceProvider.overrideWithValue(settings),
           databaseProvider.overrideWithValue(database),
+          appliancePresetsProvider.overrideWith((ref) async => presets!),
         ], child: const PowerLeftApp()));
       } else {
         await app.main();
