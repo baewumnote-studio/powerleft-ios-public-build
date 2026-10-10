@@ -58,6 +58,53 @@ jobs:
           echo "$RUNNER_TEMP/powerleft-flutter/bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/powerleft-flutter/bin/flutter" config --no-analytics
           "$RUNNER_TEMP/powerleft-flutter/bin/flutter" precache --ios
+      - name: Wait for the simulator log reader before launch
+        run: |
+          python3 - <<'PY'
+          import os,pathlib
+          # Flutter issue #181771: a simulator log-reader race loses the VM URL.
+          # Apply the readiness wait only to this disposable capture SDK.
+          sdk=pathlib.Path(os.environ['RUNNER_TEMP'])/'powerleft-flutter'
+          path=sdk/'packages/flutter_tools/lib/src/ios/simulators.dart'
+          source=path.read_text()
+          def replace_once(old,new):
+            global source
+            assert source.count(old)==1, 'Flutter capture-tool patch no longer matches.'
+            source=source.replace(old,new)
+          replace_once('    // Launch the updated application in the simulator.', '''    // Ensure the native log stream is listening before the app logs its VM URL.
+              if (debuggingOptions.debuggingEnabled) {
+                final reader = getLogReader(app: package);
+                if (reader is _IOSSimulatorLogReader) {
+                  try {
+                    await reader._ready.future.timeout(const Duration(seconds: 30));
+                  } on TimeoutException {
+                    globals.printError('The simulator log stream did not become ready.');
+                    await vmServiceDiscovery?.cancel();
+                    return LaunchResult.failed();
+                  }
+                }
+              }
+
+              // Launch the updated application in the simulator.''')
+          replace_once('  Future<void> _start() async {\n    // Unified logging',
+            '  Future<void> _start() async {\n    final ready = _ready = Completer<void>();\n    // Unified logging')
+          replace_once('  final IOSSimulator device;\n\n  final String? _appName;',
+            '  final IOSSimulator device;\n\n  var _ready = Completer<void>();\n\n  final String? _appName;')
+          replace_once('      _deviceProcess?.stdout.transform(utf8LineDecoder).listen(_onUnifiedLoggingLine);', '''      _deviceProcess?.stdout.transform(utf8LineDecoder).listen((line) {
+                  if (!ready.isCompleted) {
+                    ready.complete();
+                  }
+                  _onUnifiedLoggingLine(line);
+                });''')
+          replace_once('      _deviceProcess?.stdout.transform(utf8LineDecoder).listen(_onSysLogDeviceLine);',
+            '      _deviceProcess?.stdout.transform(utf8LineDecoder).listen(_onSysLogDeviceLine);\n      if (!ready.isCompleted) ready.complete();')
+          replace_once('      _deviceProcess?.exitCode.whenComplete(() {',
+            '      _deviceProcess?.exitCode.whenComplete(() {\n        if (!ready.isCompleted) ready.complete();')
+          path.write_text(source)
+          (sdk/'bin/cache/flutter_tools.snapshot').unlink(missing_ok=True)
+          print('Readiness wait applied to the ephemeral screenshot SDK only.')
+          PY
+          dart format --output=none "$RUNNER_TEMP/powerleft-flutter/packages/flutter_tools/lib/src/ios/simulators.dart"
       - name: Prepare only the screenshot test and locked native libraries
         run: |
           flutter pub get --enforce-lockfile
@@ -83,7 +130,8 @@ jobs:
           xcrun simctl status_bar "$DEVICE" override --time '9:41' --batteryState charged --batteryLevel 100
           echo "POWERLEFT_SIMULATOR=$DEVICE" >> "$GITHUB_ENV"
       - name: Capture the real app in all six languages
-        run: flutter drive --no-pub --debug -d "$POWERLEFT_SIMULATOR" --driver=tool/store_capture_driver.dart --target=integration_test/store_capture_test.dart --dart-define=POWERLEFT_DISABLE_ADS_FOR_TESTING=true
+        timeout-minutes: 12
+        run: flutter drive --no-pub --debug --verbose -d "$POWERLEFT_SIMULATOR" --driver=tool/store_capture_driver.dart --target=integration_test/store_capture_test.dart --dart-define=POWERLEFT_DISABLE_ADS_FOR_TESTING=true
       - name: Record screenshot provenance
         run: |
           python3 - <<'PY'
