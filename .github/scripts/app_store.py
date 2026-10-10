@@ -26,7 +26,8 @@ TEST_APP = 'ca-app-pub-3940256099942544~1458002511'
 TEST_UNIT = 'ca-app-pub-3940256099942544/4411468910'
 PRODUCTION_APP = 'ca-app-pub-9507165963073699~3930382930'
 PRODUCTION_UNIT = 'ca-app-pub-9507165963073699/3592480748'
-PRIVATE_BACKUP_REPOSITORY = 'baewumnote-studio/powerleft'
+PRIVATE_BACKUP_REPOSITORY = 'baewumnote-studio/powerleft-release-archives'
+ORIGINAL_SOURCE_REPOSITORY = 'baewumnote-studio/powerleft'
 
 def mask(value):
     # Workflow commands are escaped before passing sensitive content to the runner.
@@ -100,10 +101,17 @@ def backup_request(path, *, payload=None, method='GET', upload=False):
     with urllib.request.urlopen(req,timeout=180 if upload else 30) as response:
         return json.load(response)
 
+def validate_private_backup(repository):
+    if (PRIVATE_BACKUP_REPOSITORY==ORIGINAL_SOURCE_REPOSITORY
+        or repository.get('full_name')!=PRIVATE_BACKUP_REPOSITORY
+        or repository.get('private') is not True
+        or repository.get('fork') is not False
+        or repository.get('archived') is not False
+        or repository.get('owner',{}).get('login')!='baewumnote-studio'):
+        raise ValueError('Signed binaries require the dedicated private PowerLeft archive repository; source repositories are refused.')
+
 def verify_private_backup():
-    repository=backup_request('')
-    if repository.get('full_name')!=PRIVATE_BACKUP_REPOSITORY or repository.get('private') is not True:
-        raise ValueError('Signed binaries can only be retained in the original private PowerLeft repository.')
+    validate_private_backup(backup_request(''))
 
 def preflight():
     # Verify real signing material on inexpensive Linux before a macOS job starts.
@@ -153,7 +161,7 @@ def retain_private_binaries(archive,ipa,build):
     tag='powerleft-store-'+VERSION+'-'+build+'-'+run_id
     release=backup_request('/releases',method='POST',payload={'tag_name':tag,
         'target_commitish':'main','name':'PowerLeft '+VERSION+' ('+build+') private archive',
-        'body':'Private signed IPA and original xcarchive; no source commits replaced.',
+        'body':'Private signed IPA and original xcarchive in dedicated binary storage; original source repository is not written.',
         'draft':True,'prerelease':True})
     for name,path in (('powerleft.ipa',ipa),('powerleft-app-store.xcarchive.tar.gz',archive_file)):
         raw=path.read_bytes()
@@ -164,7 +172,7 @@ def retain_private_binaries(archive,ipa,build):
         expected=hashlib.sha256(raw).hexdigest()
         if asset.get('digest')!='sha256:'+expected:
             raise ValueError('Private distribution archive digest verification failed.')
-    print('PASS: IPA and original xcarchive retained in the original private repository with matching SHA-256.')
+    print('PASS: IPA and original xcarchive retained in dedicated private archive storage with matching SHA-256.')
 
 def prepare():
     if sys.platform!='darwin': raise ValueError('Signing requires the validated macOS runner.')

@@ -50,11 +50,16 @@ An inexpensive protected Linux job checks the real CMS profile signature,
 certificate/private-key match and validity before the Mac signing job starts.
 The Mac job then verifies the signed archive and exported IPA, and uploads
 directly to App Store Connect. It publishes no signed IPA or archive to GitHub.
-Signed binaries are retained only in a draft release of the original **private**
-PowerLeft repository, with verified upload sizes and SHA-256 digests. Its backup
-credential must be a fine-grained token limited to that private repository's
-contents permission. Temporary certificates, profiles, API keys and runner binaries
-are removed afterward. No existing private source commit or history is replaced.
+Signed binaries are retained only in a draft release of the dedicated **private**
+`baewumnote-studio/powerleft-release-archives` repository, with verified upload
+sizes and SHA-256 digests. Public, forked, archived and original source repositories
+are rejected as backup destinations. GitHub Actions is disabled in the archive
+repository. Its backup credential must be a fine-grained token limited to that
+archive repository's Contents permission with a seven-day expiry; it must not
+grant access to the original `powerleft` repository. Credentials remain subject
+to explicit authorization before creation or transfer. Temporary certificates,
+profiles, API keys and runner binaries are removed afterward. No original source
+repository write access is required or used.
 
 `test_ads` defaults to false for production delivery. Enabling it explicitly is
 for testing only and uses Google's official test app/interstitial IDs.

@@ -60,6 +60,32 @@ class AppStoreProfileGuards(TestCase):
             app_store.validate_public_ids(False,'ca-app-pub-9507165963073699~1111111111',
                                           'ca-app-pub-9507165963073699/2222222222')
 
+class PrivateArchiveGuards(TestCase):
+    def setUp(self):
+        self.repository={'full_name':app_store.PRIVATE_BACKUP_REPOSITORY,'private':True,
+            'fork':False,'archived':False,'owner':{'login':'baewumnote-studio'}}
+
+    def test_dedicated_private_archive_accepted(self):
+        app_store.validate_private_backup(self.repository)
+
+    def test_original_source_repository_refused(self):
+        self.repository['full_name']=app_store.ORIGINAL_SOURCE_REPOSITORY
+        with self.assertRaises(ValueError): app_store.validate_private_backup(self.repository)
+
+    def test_public_archive_refused(self):
+        self.repository['private']=False
+        with self.assertRaises(ValueError): app_store.validate_private_backup(self.repository)
+
+    def test_wrong_archive_owner_refused(self):
+        self.repository['owner']['login']='another-owner'
+        with self.assertRaises(ValueError): app_store.validate_private_backup(self.repository)
+
+    def test_fork_or_archived_storage_refused(self):
+        for name in ('fork','archived'):
+            with self.subTest(name=name):
+                repository={**self.repository,name:True}
+                with self.assertRaises(ValueError): app_store.validate_private_backup(repository)
+
 class PreviousCompilationGuards(TestCase):
     def setUp(self):
         self.environment={'GITHUB_REPOSITORY':verify_request.REPOSITORY,'GITHUB_EVENT_NAME':'workflow_dispatch',
